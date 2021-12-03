@@ -20,9 +20,9 @@ typedef struct {
 
 /* 나중에 삭제할 부분들*/
 
-void left_rotation(rbtree* t);
-void right_rotation(rbtree* t);
-
+void left_rotation(rbtree *, node_t *);
+void right_rotation(rbtree *, node_t *);
+void insert_fixup(rbtree *, node_t *);
 
 
 /*******************/
