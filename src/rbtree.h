@@ -18,6 +18,16 @@ typedef struct {
   node_t *nil;  // for sentinel
 } rbtree;
 
+/* 나중에 삭제할 부분들*/
+
+void left_rotation(rbtree* t);
+void right_rotation(rbtree* t);
+
+
+
+/*******************/
+
+
 rbtree *new_rbtree(void);
 void delete_rbtree(rbtree *);
 
