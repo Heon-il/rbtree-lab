@@ -42,58 +42,57 @@ void insert_fixup(rbtree *t, node_t *z){
     // 부모가 조부모의 왼쪽 자식인 경우
     if (z->parent == z->parent->parent->left){
       node_t *y = z->parent->parent->right; // 삼촌노드
-
-      if (y->color == RBTREE_RED){
-        // 삼촌의 색이 빨간색인 경우 -> color flipping
-        z->parent->color = RBTREE_BLACK;
-        y->color = RBTREE_BLACK;
-        z->parent ->parent ->color = RBTREE_RED;
-        z = z->parent->parent; // 조부모를 다시 노드로 설정하여 insert_fixup을 반복
-        continue;
-      }
-
-      else if(z == z->parent->right){
-        // 부모의 오른쪽으로 삽입할 때 --> 여기 sudo 코드 부분 이해가 안된다.
+      if (y == NULL || y->color ==RBTREE_BLACK){
+        if(z == z->parent->right){
         z = z->parent;
         left_rotation(t, z);
       }
       z->parent->color = RBTREE_BLACK;
       z->parent->parent->color = RBTREE_RED;
       right_rotation(t, z->parent->parent);
+      }
+
+      else if (y->color == RBTREE_RED){
+        // 삼촌의 색이 빨간색인 경우 -> color flipping
+        z->parent->color = RBTREE_BLACK;
+        y->color = RBTREE_BLACK;
+        z->parent ->parent ->color = RBTREE_RED;
+        z = z->parent->parent; // 조부모를 다시 노드로 설정하여 insert_fixup을 반복
+        if (z==t->root)
+          break;
+      }
     }
 
     // 부모가 조부모의 오른쪽 자식인 경우
     else{
       node_t *y = z->parent->parent->left; // 삼촌 노드
-
-      if (y->color ==RBTREE_RED){ // 삼촌 노드의 색이 빨간색인 경우 
-        z->parent->color = RBTREE_BLACK;
-        y->color = RBTREE_BLACK;
-        z->parent ->parent ->color = RBTREE_RED;
-        z = z->parent->parent; // 조부모를 다시 노드로 설정하여 insert_fixup을 반복
-        continue;
-      }
-
-      else if(z== z->parent->left){
+      if (y==NULL || y->color ==RBTREE_BLACK){
+        if(z== z->parent->left){
         z = z ->parent;
         right_rotation(t,z);
       }
       z->parent->color = RBTREE_BLACK;
       z->parent->parent->color = RBTREE_RED;
       left_rotation(t, z->parent->parent); //탈출 조건은 없어도 되는건가?
-
+      }
+      else if (y->color ==RBTREE_RED){ // 삼촌 노드의 색이 빨간색인 경우 
+        z->parent->color = RBTREE_BLACK;
+        y->color = RBTREE_BLACK;
+        z->parent ->parent ->color = RBTREE_RED;
+        z = z->parent->parent; // 조부모를 다시 노드로 설정하여 insert_fixup을 반복
+        if (z==t->root)
+          break;
+      }
     }
   }
   t->root->color = RBTREE_BLACK;
 }
 
-
-
 // root -> left -> right
 void postorder(rbtree *t, node_t *p){
   if (p==t->nil)
     return;
-  printf("%d  ", p->key);
+  printf("key : %d color : %d, ", p->key, p->color);
   postorder(t, p->left);
   postorder(t, p->right);
   
@@ -104,7 +103,7 @@ void inorder(rbtree *t, node_t *p){
   if (p==t->nil)
     return;
   inorder(t, p->left);
-  printf("%d  ", p->key);
+  printf("key : %d color : %d, ", p->key, p->color);
   inorder(t, p->right);
 }
 
@@ -114,7 +113,7 @@ void preorder(rbtree *t, node_t *p){
     return;
   preorder(t, p->left);
   preorder(t, p->right);
-  printf("%d  ", p->key);
+  printf("key : %d color : %d, ", p->key, p->color);
 }
 
 /* 위에는 내가 필요에 의해 구현 한 것 들*/
@@ -133,9 +132,7 @@ void delete_rbtree(rbtree *t) {
 
 // key 추가
 node_t *rbtree_insert(rbtree *t, const key_t key) {
-
   node_t *next, *cur;
-
   // 첫 insert
   if (t->root == NULL){
     node_t* node = (node_t*)calloc(1, sizeof(node_t));
@@ -176,7 +173,7 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
     cur->right = node;
   }
 
-  // insert_fixup(t, node);
+  insert_fixup(t, node);
 
   return t->root;
 }
@@ -202,6 +199,7 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
   // while (cur->key != key && cur != t->nil){
   //   cur = (cur->key<key) ? cur = cur->left: cur->right;
   // }
+  
   return cur; 
 }
 
