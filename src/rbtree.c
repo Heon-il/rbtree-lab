@@ -18,7 +18,6 @@ int bst_erase(rbtree *t, node_t* z){
       bst_transparent(t, y, y->right);
       y->right = z->right;
       y->right->parent = y;
-
     }
     bst_transparent(t, z, y);
     y->left = z->left;
@@ -221,7 +220,7 @@ rbtree *new_rbtree(void) {
 
 
 void delete_rbtree(rbtree *t) {
-  delete_node_all(t->root); -//함수 안쓰고 재귀로 ..? 어떻게 해야하지
+  delete_node_all(t->root); //함수 안쓰고 재귀로 ..? 어떻게 해야하지
   free(t);
   t=NULL;
 }
