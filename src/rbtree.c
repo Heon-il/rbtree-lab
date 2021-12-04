@@ -221,6 +221,8 @@ node_t *rbtree_max(const rbtree *t) {
 // p로 지정된 node 삭제 및 메모리 반환
 int rbtree_erase(rbtree *t, node_t *p) {
   // TODO: implement erase
+  // rbtree_erase(t, rbtree_find(t,key)); 이런식으로 쓸 수 있을 듯
+  // 
   return 0;
 }
 

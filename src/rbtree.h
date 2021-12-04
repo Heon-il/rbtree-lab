@@ -25,6 +25,11 @@ void insert_fixup(rbtree *, node_t *);
 void preorder(rbtree *, node_t*);
 void inorder(rbtree *, node_t*);
 void postorder(rbtree *, node_t*);
+node_t *successor(rbtree *, node_t *);
+node_t *predecessor(rbtree *, node_t *);
+int bst_erase(rbtree *, node_t* );
+void bst_transparent(rbtree*, node_t*, node_t*);
+void delete_node_all(node_t*);
 /*                */
 
 
