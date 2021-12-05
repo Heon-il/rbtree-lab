@@ -1,353 +1,293 @@
-#include "rbtree.h"
+#include <assert.h>
+#include <rbtree.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <stdio.h> // 나중에 삭제
 
+// new_rbtree should return rbtree struct with null root node
+void test_init(void) {
+  rbtree *t = new_rbtree();
+  assert(t != NULL);
+  assert(t->root == NULL);
+  delete_rbtree(t);
+}
 
-int bst_erase(rbtree *t, node_t* z){
-  // 루트를 삭제 할 때에는 t의 root를 NULL로 만들어 줘야 한다.
-  if (z->left == NULL){
-    bst_transparent(t,z, z->right);
+// root node should have proper values and pointers
+void test_insert_single(const key_t key) {
+  rbtree *t = new_rbtree();
+  node_t *p = rbtree_insert(t, key);
+  assert(p != NULL);
+  assert(t->root == p);
+  assert(p->key == key);
+  // assert(p->color == RBTREE_BLACK);  // color of root node should be black
+  assert(p->left == NULL);
+  assert(p->right == NULL);
+  assert(p->parent == NULL);
+  delete_rbtree(t);
+}
 
+// find should return the node with the key or NULL if no such node exists
+void test_find_single(const key_t key, const key_t wrong_key) {
+  rbtree *t = new_rbtree();
+  node_t *p = rbtree_insert(t, key);
+
+  node_t *q = rbtree_find(t, key);
+  assert(q != NULL);
+  assert(q->key == key);
+  assert(q == p);
+
+  q = rbtree_find(t, wrong_key);
+  assert(q == NULL);
+
+  delete_rbtree(t);
+}
+
+// erase should delete root node
+void test_erase_root(const key_t key) {
+  rbtree *t = new_rbtree();
+  node_t *p = rbtree_insert(t, key);
+  assert(p != NULL);
+  assert(t->root == p);
+  assert(p->key == key);
+
+  rbtree_erase(t, p);
+  assert(t->root == NULL);
+
+  delete_rbtree(t);
+}
+
+static void insert_arr(rbtree *t, const key_t *arr, const size_t n) {
+  for (size_t i = 0; i < n; i++) {
+    rbtree_insert(t, arr[i]);
   }
-  else if (z->right ==NULL){
-    bst_transparent(t,z,z->left);
+}
+
+static int comp(const void *p1, const void *p2) {
+  const key_t *e1 = (const key_t *)p1;
+  const key_t *e2 = (const key_t *)p2;
+  if (*e1 < *e2) {
+    return -1;
+  } else if (*e1 > *e2) {
+    return 1;
+  } else {
+    return 0;
   }
-  else{
-    node_t *y = successor(t, z);
-    // z가 y의 부모가 아닌 경우
-    if(y->parent != z){
-      bst_transparent(t, y, y->right);
-      y->right = z->right;
-      y->right->parent = y;
+};
+
+// min/max should return the min/max value of the tree
+void test_minmax(key_t *arr, const size_t n) {
+  // null array is not allowed
+  assert(n > 0 && arr != NULL);
+
+  rbtree *t = new_rbtree();
+  assert(t != NULL);
+
+  insert_arr(t, arr, n);
+  assert(t->root != NULL);
+
+  qsort((void *)arr, n, sizeof(key_t), comp);
+  node_t *p = rbtree_min(t);
+  assert(p != NULL);
+  assert(p->key == arr[0]);
+
+  node_t *q = rbtree_max(t);
+  assert(q != NULL);
+  assert(q->key == arr[n - 1]);
+
+  rbtree_erase(t, p);
+  p = rbtree_min(t);
+  assert(p != NULL);
+  assert(p->key == arr[1]);
+
+  if (n >= 2) {
+    rbtree_erase(t, q);
+    q = rbtree_max(t);
+    assert(q != NULL);
+    assert(q->key == arr[n - 2]);
+  }
+
+  delete_rbtree(t);
+}
+
+void test_to_array(rbtree *t, const key_t *arr, const size_t n) {
+  assert(t != NULL);
+
+  insert_arr(t, arr, n);
+  qsort((void *)arr, n, sizeof(key_t), comp);
+
+  key_t *res = calloc(n, sizeof(key_t));
+  rbtree_to_array(t, res, n);
+  for (int i = 0; i < n; i++) {
+    assert(arr[i] == res[i]);
+  }
+}
+
+void test_multi_instance() {
+  rbtree *t1 = new_rbtree();
+  assert(t1 != NULL);
+  rbtree *t2 = new_rbtree();
+  assert(t2 != NULL);
+
+  key_t arr1[] = {10, 5, 8, 34, 67, 23, 156, 24, 2, 12, 24, 36, 990, 25};
+  const size_t n1 = sizeof(arr1) / sizeof(arr1[0]);
+  insert_arr(t1, arr1, n1);
+  qsort((void *)arr1, n1, sizeof(key_t), comp);
+
+  key_t arr2[] = {4, 8, 10, 5, 3};
+  const size_t n2 = sizeof(arr2) / sizeof(arr2[0]);
+  insert_arr(t2, arr2, n2);
+  qsort((void *)arr2, n2, sizeof(key_t), comp);
+
+  key_t *res1 = calloc(n1, sizeof(key_t));
+  rbtree_to_array(t1, res1, n1);
+  for (int i = 0; i < n1; i++) {
+    assert(arr1[i] == res1[i]);
+  }
+
+  key_t *res2 = calloc(n2, sizeof(key_t));
+  rbtree_to_array(t2, res2, n2);
+  for (int i = 0; i < n2; i++) {
+    assert(arr2[i] == res2[i]);
+  }
+
+  delete_rbtree(t2);
+  delete_rbtree(t1);
+}
+
+// Search tree constraint
+// The values of left subtree should be less than or equal to the current node
+// The values of right subtree should be greater than or equal to the current
+// node
+
+static bool search_traverse(const node_t *p, key_t *min, key_t *max) {
+  if (p == NULL) {
+    return true;
+  }
+
+  *min = *max = p->key;
+
+  key_t l_min, l_max, r_min, r_max;
+  l_min = l_max = r_min = r_max = p->key;
+
+  const bool lr = search_traverse(p->left, &l_min, &l_max);
+  if (!lr || l_max > p->key) {
+    return false;
+  }
+  const bool rr = search_traverse(p->right, &r_min, &r_max);
+  if (!rr || r_min < p->key) {
+    return false;
+  }
+
+  *min = l_min;
+  *max = r_max;
+  return true;
+}
+
+void test_search_constraint(const rbtree *t) {
+  assert(t != NULL);
+  node_t *p = t->root;
+  key_t min, max;
+  assert(search_traverse(p, &min, &max));
+}
+
+// Color constraint
+// 1. Each node is either red or black. (by definition)
+// 2. All NIL nodes are considered black.
+// 3. A red node does not have a red child.
+// 4. Every path from a given node to any of its descendant NIL nodes goes
+// through the same number of black nodes.
+
+bool touch_nil = false;
+int max_black_depth = 0;
+
+static void init_color_traverse(void) {
+  touch_nil = false;
+  max_black_depth = 0;
+}
+
+static bool color_traverse(const node_t *p, const color_t parent_color,
+                           const int black_depth) {
+  if (p == NULL) {
+    if (!touch_nil) {
+      touch_nil = true;
+      max_black_depth = black_depth;
+    } else if (black_depth != max_black_depth) {
+      return false;
     }
-    else{
-      bst_transparent(t, z, y);
-      y->left = z->left;
-      y->left->parent = y;
-    }
+    return true;
   }
-  free(z);
-  return 0;
-}
-
-// 노드 u가 루트인 subtree를 노드 v가 루트인 subtree로 교체할 때, 
-void bst_transparent(rbtree* t, node_t* u, node_t* v){
-  // u가 전체 tree의 루트인 경우
-  if (u->parent == NULL)
-    t->root = v;
-
-  // u가 왼쪽 자식 인 경우
-  else if (u == u->parent->left)
-    u->parent->left= v;
-  else
-    u->parent->right = v; 
-  
-  if (v!=NULL)
-    v->parent = u->parent;
-
-  // delete_node_all(u); // u의 모든 노드를 삭제 해줘야하나?,,,,,,,,,,무,ㅡㄴㅇ루,믄루으,ㅁ눌ㅇ
-
-}
-
-
-node_t *successor(rbtree *t , node_t *x){
-  // right subtree
-  if (x->right!=NULL){
-    // right subtree의 max
-    x = x->right;
-    while(x->left!=NULL)
-      x = x->left;
-    return x;
+  if (parent_color == RBTREE_RED && p->color == RBTREE_RED) {
+    return false;
   }
-
-  else{
-    // North - West
-    node_t* y  = x->parent;
-    while (y!=NULL && x == y->right){
-      x = y;
-      y = y->parent;
-    }
-  return y;
-  }
+  int next_depth = ((p->color == RBTREE_BLACK) ? 1 : 0) + black_depth;
+  return color_traverse(p->left, p->color, next_depth) &&
+         color_traverse(p->right, p->color, next_depth);
 }
 
-node_t *predecessor(rbtree *t, node_t *x){
-  // left subtree
-  if (x->left != NULL){
-    // left subtree의 max
-    x = x->left;
-    while (x->right!=NULL)
-      x = x->right;
-    return x;
-  }
+void test_color_constraint(const rbtree *t) {
+  assert(t != NULL);
+  node_t *p = t->root;
+  assert(p == NULL || p->color == RBTREE_BLACK);
 
-  else{
-    // North - East
-    node_t* y = x->parent;
-    while (y!=NULL && x == y->left){
-      x = y;
-      y = y->parent;
-    }
-    return y;
-  }
+  init_color_traverse();
+  assert(color_traverse(p, RBTREE_BLACK, 0));
 }
 
+// rbtree should keep search tree and color constraints
+void test_rb_constraints(const key_t arr[], const size_t n) {
+  rbtree *t = new_rbtree();
+  assert(t != NULL);
 
+  insert_arr(t, arr, n);
+  assert(t->root != NULL);
 
+  test_color_constraint(t);
+  test_search_constraint(t);
 
-
-
-void left_rotation(rbtree *t, node_t *x){
-  node_t *y = x->right;
-  x->right = y->left;
-
-  if (y->left !=NULL)
-    y->left->parent = x;
-
-  y->parent = x->parent;
-
-  if (x->parent==NULL) t->root = y;
-  else if (x == x->parent->left) x->parent->left = y;
-  else x->parent->right = y; 
-  
-  y->left = x;
-  x->parent = y;
+  delete_rbtree(t);
 }
 
-void right_rotation(rbtree *t, node_t *y){
-  node_t *x = y->left;
-  y->left = x->right;
-
-  if (x->right != NULL)
-    x->right->parent = y;
-
-  x->parent = y->parent;
-
-  if (y->parent == NULL) t->root = x;
-  else if (y->parent->left == y) y->parent->left = x; 
-  else y->parent->right = x;
-  
-  x->right = y;
-  y->parent = x;
+// rbtree should manage distinct values
+void test_distinct_values() {
+  const key_t entries[] = {10, 5, 8, 34, 67, 23, 156, 24, 2, 12};
+  const size_t n = sizeof(entries) / sizeof(entries[0]);
+  test_rb_constraints(entries, n);
 }
 
-
-void insert_fixup(rbtree *t, node_t *z){
-  while (z->parent->color == RBTREE_RED){
-    // 부모가 조부모의 왼쪽 자식인 경우
-    if (z->parent == z->parent->parent->left){
-      node_t *y = z->parent->parent->right; // 삼촌노드
-      if (y == NULL || y->color ==RBTREE_BLACK){
-        if(z == z->parent->right){
-        z = z->parent;
-        left_rotation(t, z);
-      }
-      z->parent->color = RBTREE_BLACK;
-      z->parent->parent->color = RBTREE_RED;
-      right_rotation(t, z->parent->parent);
-      }
-
-      else if (y->color == RBTREE_RED){
-        // 삼촌의 색이 빨간색인 경우 -> color flipping
-        z->parent->color = RBTREE_BLACK;
-        y->color = RBTREE_BLACK;
-        z->parent ->parent ->color = RBTREE_RED;
-        z = z->parent->parent; // 조부모를 다시 노드로 설정하여 insert_fixup을 반복
-        if (z==t->root)
-          break;
-      }
-    }
-
-    // 부모가 조부모의 오른쪽 자식인 경우
-    else{
-      node_t *y = z->parent->parent->left; // 삼촌 노드
-      if (y==NULL || y->color ==RBTREE_BLACK){
-        if(z== z->parent->left){
-        z = z ->parent;
-        right_rotation(t,z);
-      }
-      z->parent->color = RBTREE_BLACK;
-      z->parent->parent->color = RBTREE_RED;
-      left_rotation(t, z->parent->parent); //탈출 조건은 없어도 되는건가?
-      }
-      else if (y->color ==RBTREE_RED){ // 삼촌 노드의 색이 빨간색인 경우 
-        z->parent->color = RBTREE_BLACK;
-        y->color = RBTREE_BLACK;
-        z->parent ->parent ->color = RBTREE_RED;
-        z = z->parent->parent; // 조부모를 다시 노드로 설정하여 insert_fixup을 반복
-        if (z==t->root)
-          break;
-      }
-    }
-  }
-  t->root->color = RBTREE_BLACK;
+// rbtree should manage values with duplicate
+void test_duplicate_values() {
+  const key_t entries[] = {10, 5, 5, 34, 6, 23, 12, 12, 6, 12};
+  const size_t n = sizeof(entries) / sizeof(entries[0]);
+  test_rb_constraints(entries, n);
 }
 
-// root -> left -> right
-void postorder(rbtree *t, node_t *p){
-  if (p==t->nil)
-    return;
-  printf("key : %d color : %d, ", p->key, p->color);
-  postorder(t, p->left);
-  postorder(t, p->right);
-  
+void test_minmax_suite() {
+  key_t entries[] = {10, 5, 8, 34, 67, 23, 156, 24, 2, 12};
+  const size_t n = sizeof(entries) / sizeof(entries[0]);
+  test_minmax(entries, n);
 }
 
-// left -> root -> right
-void inorder(rbtree *t, node_t *p){
-  if (p==t->nil)
-    return;
-  inorder(t, p->left);
-  printf("key : %d color : %d, ", p->key, p->color);
-  inorder(t, p->right);
+void test_to_array_suite () {
+  rbtree *t = new_rbtree();
+  assert(t != NULL);
+
+  key_t entries[] = {10, 5, 8, 34, 67, 23, 156, 24, 2, 12, 24, 36, 990, 25};
+  const size_t n = sizeof(entries) / sizeof(entries[0]);
+  test_to_array(t, entries, n);
+
+  delete_rbtree(t);
 }
 
-// left -> right -> root
-void preorder(rbtree *t, node_t *p){
-  if (p==t->nil)
-    return;
-  preorder(t, p->left);
-  preorder(t, p->right);
-  printf("key : %d color : %d, ", p->key, p->color);
-}
-
-
-void delete_node_all(node_t* p){
-  if (p==NULL)
-    return;
-  delete_node_all(p->left);
-  delete_node_all(p->right);
-  free(p);
-}
-
-/* 위에는 내가 필요에 의해 구현 한 것 들*/
-
-rbtree *new_rbtree(void) {
-  rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
-  p->root = NULL;
-  p->nil = NULL;
-  return p;
-}
-
-
-void delete_rbtree(rbtree *t) {
-  delete_node_all(t->root); // 음........... 만ㅇ러ㅣㅏㅁ널이ㅏㅓ
-  free(t);
-  t=NULL;
-}
-
-// key 추가
-node_t *rbtree_insert(rbtree *t, const key_t key) {
-  node_t *next, *cur;
-  // 첫 insert
-  if (t->root == NULL){
-    node_t* node = (node_t*)calloc(1, sizeof(node_t));
-    node->key = key;
-    node->color = RBTREE_BLACK;
-    node->parent = NULL;
-    node -> left = NULL; 
-    node -> right = NULL;
-    t->root = node;
-    return t->root;
-  }
-
-  // 노드 생성
-  node_t* node = (node_t*)calloc(1, sizeof(node_t));
-  node -> left = NULL; 
-  node -> right = NULL;
-  node->key = key;
-
-  // BST insert
-  cur = NULL; // 삽입될 노드의 부모 노드
-  next = t->root;
-  while (next != NULL){
-    cur = next;
-    next = (key < next->key ) ? next->left : next->right;
-  }
-
-  node->parent = cur;
-  if (cur==NULL){ // 빈 트리
-    node -> color = RBTREE_BLACK; 
-    t->root = node;
-  }
-  else if (cur->key > key){
-    node -> color = RBTREE_RED; 
-    cur->left = node;
-  }
-  else{
-    node -> color = RBTREE_RED; 
-    cur->right = node;
-  }
-
-  insert_fixup(t, node);
-
-  return t->root;
-}
-
-
-node_t *rbtree_find(const rbtree *t, const key_t key) {
-
-  node_t *cur = t->root;
-  while (cur->key !=key && cur!=NULL){
-    if (key < cur->key){
-      cur = cur->left;
-      if (cur==NULL)
-        return NULL;
-    }
-    else{
-      cur = cur->right;
-      if(cur==NULL)
-        return NULL;
-    }
-  }
-  
-  // 위에서는 잘되는데 왜 오류가 나는지 모르겠다.
-  // while (cur->key != key && cur != t->nil){
-  //   cur = (cur->key<key) ? cur = cur->left: cur->right;
-  // }
-  
-  return cur; 
-}
-
-
-node_t *rbtree_min(const rbtree *t) {
-  node_t *x = t->root;
-  if (x==NULL){
-    // No node
-    return x;
-  }
-  while (x->left!=NULL)
-    x = x->left;
-  return x;
-}
-
-node_t *rbtree_max(const rbtree *t) {
-  node_t *x = t->root;
-  if (x==NULL){
-    // No node
-    return x;
-  }
-
-  while (x->right !=NULL)
-    x = x->right;
-  return x;
-}
-
-
-
-
-// p로 지정된 node 삭제 및 메모리 반환
-int rbtree_erase(rbtree *t, node_t *p) {
-  // TODO: implement erase
-  
-  
-
-  
-  
-  return 0;
-}
-
-int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
-  // TODO: implement to_array
-  return 0;
+int main(void) {
+  printf("Hello World\n");
+  test_init(); 
+  test_insert_single(1024);
+  test_find_single(512, 1024);
+  test_erase_root(128);
+  test_minmax_suite();
+  test_to_array_suite();
+  test_distinct_values();
+  test_duplicate_values();
+  test_multi_instance();
+  printf("Passed all tests!\n");
 }
