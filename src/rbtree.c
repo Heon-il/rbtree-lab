@@ -101,11 +101,6 @@ node_t *predecessor(rbtree *t, node_t *x){
   }
 }
 
-
-
-
-
-
 void left_rotation(rbtree *t, node_t *x){
   node_t *y = x->right;
   x->right = y->left;
@@ -171,13 +166,13 @@ void insert_fixup(rbtree *t, node_t *z){
     else{
       node_t *y = z->parent->parent->left; // 삼촌 노드
       if (y==NULL || y->color ==RBTREE_BLACK){
-        if(z== z->parent->left){
-        z = z ->parent;
-        right_rotation(t,z);
-      }
-      z->parent->color = RBTREE_BLACK;
-      z->parent->parent->color = RBTREE_RED;
-      left_rotation(t, z->parent->parent); //탈출 조건은 없어도 되는건가?
+          if(z== z->parent->left){
+          z = z ->parent;
+          right_rotation(t,z);
+        }
+        z->parent->color = RBTREE_BLACK;
+        z->parent->parent->color = RBTREE_RED;
+        left_rotation(t, z->parent->parent); //탈출 조건은 없어도 되는건가?
       }
       else if (y->color ==RBTREE_RED){ // 삼촌 노드의 색이 빨간색인 경우 
         z->parent->color = RBTREE_BLACK;
@@ -236,13 +231,11 @@ rbtree *new_rbtree(void) {
   p->root = NULL;
   p->nil = NULL;
 
-
   return p;
 }
 
-
 void delete_rbtree(rbtree *t) {
-  delete_node_all(t->root); // 음........... 만ㅇ러ㅣㅏㅁ널이ㅏㅓ
+  delete_node_all(t->root);
   free(t);
   t=NULL;
 }
@@ -349,14 +342,22 @@ node_t *rbtree_max(const rbtree *t) {
 
 // p로 지정된 node 삭제 및 메모리 반환
 int rbtree_erase(rbtree *t, node_t *p) {
-  // TODO: implement erase
-  
+
+  // tree자체가 만들어지지 않았거나 트리에 아무 값도 없을 때
+  if (t==NULL || t->root==NULL){
+    return -1;
+  }
+  // 삭제하려는 노드가 존재하지 않는 경우
+  if (p==NULL){
+    // 예외처리를 배워서 해두면 좋을 것 같음
+    return -1;
+  }
+
   node_t* y = p;
   color_t y_original_color = y->color;
   node_t* x;
 
   node_t* tmp; // parent
-
   if (p->left ==NULL){ // NULL과 동일
     x = p->right;
     tmp = p->parent;
@@ -372,9 +373,11 @@ int rbtree_erase(rbtree *t, node_t *p) {
     // y는 무조건 NULL이 아니다.
     y = successor(t, p);
     x = y->right; 
+    y_original_color = y->color;
 
     if (y->parent == p && x!=NULL){
       x->parent = y;
+      tmp = y ;
     }
     else if (y->parent == p && x==NULL){
       tmp = y;
@@ -407,9 +410,13 @@ int rbtree_erase(rbtree *t, node_t *p) {
 
 // x를 시작으로 계속해서 fixup해 나가는 것.
 void rb_delete_fixup(rbtree* t, node_t* x, node_t* p){
-  
-  while(x!=t->root && (x->color == RBTREE_BLACK || x==NULL)){
-    // x가 부모의 오른쪽 자식 인 경우
+  while(1){
+    if (x==t->root)
+      break;
+    if (x!=NULL && x->color == RBTREE_RED){
+      break;
+    }
+    // 왼쪽 자식인 경우
     if (x==p->left){
       node_t* w = p->right; // sibling
 
@@ -442,14 +449,14 @@ void rb_delete_fixup(rbtree* t, node_t* x, node_t* p){
       else{
         w->color = p->color;
         p->color = RBTREE_BLACK;
-        w->right->color == RBTREE_BLACK;
+        w->right->color = RBTREE_BLACK;
         left_rotation(t,p);
         x = t->root; 
         // 탈출
       }
     }
 
-    // x가 부모의 왼쪽 자식인 경우
+    // 오른쪽 자식인 경우
     else{
       node_t* w = p->left;
 
@@ -480,61 +487,20 @@ void rb_delete_fixup(rbtree* t, node_t* x, node_t* p){
       else{
         w->color = p->color;
         p->color = RBTREE_BLACK;
-        w->left->color == RBTREE_BLACK;
+        w->left->color = RBTREE_BLACK;
         right_rotation(t,p);
         x = t->root; 
       }
     }
   }
+  
   if (x!=NULL){
     x->color = RBTREE_BLACK;
   }
+  
 }
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   // TODO: implement to_array
   return 0;
-}
-
-
-
-
-
-int main(){
-    
-    rbtree* t = new_rbtree();
-    rbtree_insert(t, 10);
-    rbtree_insert(t, 11);
-    rbtree_insert(t, 9);
-    rbtree_insert(t, 8);
-    
-    // 여기 9를 삭제하는 것 부터 뭔가 잘못 되었음
-    
-    printf("\n----------------\n");
-    postorder(t, t->root);
-    printf("\n----------------\n");
-    
-    rbtree_erase(t, rbtree_find(t, 9));
-    printf("\n----------------\n");
-    postorder(t, t->root);
-    printf("\n----------------\n");
-
-
-  /*
-    rbtree_insert(t, 12);
-    rbtree_insert(t, 5);
-    rbtree_insert(t, 6);
-    
-    printf("\n----------------\n");
-    postorder(t, t->root);
-    printf("\n----------------\n");
-    
-    
-    rbtree_erase(t, rbtree_find(t, 6));
-    printf("\n----------------\n");
-    postorder(t, t->root);
-    printf("\n----------------\n");
-  */
-
-    return 0;
 }
