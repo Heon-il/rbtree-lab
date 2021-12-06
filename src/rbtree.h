@@ -28,14 +28,15 @@ void postorder(rbtree *, node_t*);
 node_t *successor(rbtree *, node_t *);
 node_t *predecessor(rbtree *, node_t *);
 int bst_erase(rbtree *, node_t* );
-void bst_transparent(rbtree*, node_t*, node_t*);
+void bst_transplant(rbtree*, node_t*, node_t*);
 void delete_node_all(node_t*);
+void rbtree_transplant(rbtree*, node_t*,node_t*);
+void rb_delete_fixup(rbtree*, node_t*, node_t*);
 /*                */
 
 
 rbtree *new_rbtree(void);
 void delete_rbtree(rbtree *);
-
 node_t *rbtree_insert(rbtree *, const key_t);
 node_t *rbtree_find(const rbtree *, const key_t);
 node_t *rbtree_min(const rbtree *);

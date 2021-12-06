@@ -44,9 +44,6 @@ void bst_transplant(rbtree* t, node_t* u, node_t* v){
   
   if (v!=NULL)
     v->parent = u->parent;
-
-  // delete_node_all(u); // u의 모든 노드를 삭제 해줘야하나?,,,,,,,,,,무,ㅡㄴㅇ루,믄루으,ㅁ눌ㅇ
-
 }
 
 void rbtree_transplant(rbtree* t, node_t* u, node_t* v){
@@ -57,7 +54,6 @@ void rbtree_transplant(rbtree* t, node_t* u, node_t* v){
   else
     u->parent->right = v;
   
-  // 경계 노드 때문에 어떤 변화가 생길지 봐야겠다.
   if(v!=NULL)
     v->parent = u->parent;
 }
@@ -152,12 +148,12 @@ void insert_fixup(rbtree *t, node_t *z){
       node_t *y = z->parent->parent->right; // 삼촌노드
       if (y == NULL || y->color ==RBTREE_BLACK){
         if(z == z->parent->right){
-        z = z->parent;
-        left_rotation(t, z);
-      }
-      z->parent->color = RBTREE_BLACK;
-      z->parent->parent->color = RBTREE_RED;
-      right_rotation(t, z->parent->parent);
+          z = z->parent;
+          left_rotation(t, z);
+        }
+        z->parent->color = RBTREE_BLACK;
+        z->parent->parent->color = RBTREE_RED;
+        right_rotation(t, z->parent->parent);
       }
 
       else if (y->color == RBTREE_RED){
@@ -239,6 +235,8 @@ rbtree *new_rbtree(void) {
   rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
   p->root = NULL;
   p->nil = NULL;
+
+
   return p;
 }
 
@@ -356,32 +354,187 @@ int rbtree_erase(rbtree *t, node_t *p) {
   node_t* y = p;
   color_t y_original_color = y->color;
   node_t* x;
+
+  node_t* tmp; // parent
+
   if (p->left ==NULL){ // NULL과 동일
     x = p->right;
+    tmp = p->parent;
     rbtree_transplant(t, p, p->right);
   }
   else if (p->right == NULL){
     x = p->left;
+    tmp = p->parent;
     rbtree_transplant(t, p, p->left);
   }
 
   else{
+    // y는 무조건 NULL이 아니다.
     y = successor(t, p);
-    x = y->right; // 만약에 x가 null이라면 어떻게 되지?
+    x = y->right; 
 
-    // NULL이니까 힘들다.
-    
-    // if (y->parent == p)
-    //   x->
+    if (y->parent == p && x!=NULL){
+      x->parent = y;
+    }
+    else if (y->parent == p && x==NULL){
+      tmp = y;
+    }
+    else{
+      // 바꾸기 전에 
+      tmp = y->parent; // 이게 나중에 x의 parent가 된다.
+      rbtree_transplant(t, y, y->right);
+      y->right = p->right;
+      y->right->parent = y;
+    }
+
+    rbtree_transplant(t, p, y);
+    y->left = p->left;
+    y->left->parent = y;
+    y->color = p->color; // 대체된 노드는 
   }
 
+
+  // case 1, 2 의 경우 x가 NULL이라면 x의 parent는 p->parent가 된다.
+  // case 3에서 x가 null이라면 y
+  if (y_original_color == RBTREE_BLACK){
+    rb_delete_fixup(t, x, tmp);
+  }
 
   free(p);
   
   return 0;
 }
 
+// x를 시작으로 계속해서 fixup해 나가는 것.
+void rb_delete_fixup(rbtree* t, node_t* x, node_t* p){
+  
+  while(x!=t->root && (x->color == RBTREE_BLACK || x==NULL)){
+    // x가 부모의 오른쪽 자식 인 경우
+    if (x==p->left){
+      node_t* w = p->right; // sibling
+
+      // case change
+      if (w->color == RBTREE_RED){
+        w->color = RBTREE_BLACK;
+        p->color = RBTREE_RED;
+        left_rotation(t, p);
+        w = p->right;
+      }
+
+      // case 1) sibling의 자식이 모두 검정
+      if((w->left->color == RBTREE_BLACK || w->left == NULL) && (w->right->color == RBTREE_BLACK || w->right == NULL)){
+        w->color = RBTREE_RED;
+        x = p;
+        // my code
+        if (x!= t->root)
+          p = x->parent->parent;
+      }
+      // case 2) sibling의 자식의 왼쪽은 빨강, 오른쪽은 검정
+      else if (w->right->color == RBTREE_BLACK || w->right == NULL){
+        w->color = RBTREE_RED;
+        if (w->left!=NULL)
+          w->left->color = RBTREE_BLACK;
+        right_rotation(t, w);
+        w = p->right;
+      }
+
+      // case 3) sibling의 자식의 오른쪽이 빨강
+      else{
+        w->color = p->color;
+        p->color = RBTREE_BLACK;
+        w->right->color == RBTREE_BLACK;
+        left_rotation(t,p);
+        x = t->root; 
+        // 탈출
+      }
+    }
+
+    // x가 부모의 왼쪽 자식인 경우
+    else{
+      node_t* w = p->left;
+
+      // case change
+      if (w->color == RBTREE_RED){
+        w->color = RBTREE_BLACK;
+        p->color = RBTREE_RED;
+        right_rotation(t, p);
+        w = p->right;
+      }
+
+      // case 1)
+      if((w->left->color == RBTREE_BLACK || w->left == NULL) && (w->right->color == RBTREE_BLACK || w->right == NULL)){
+        w->color = RBTREE_RED;
+        x = p;
+        // my code
+        if (x!= t->root)
+          p = x->parent->parent;
+      }
+
+      else if (w->left->color == RBTREE_BLACK || w->left == NULL){
+        w->color = RBTREE_RED;
+        if (w->right!=NULL)
+          w->right->color = RBTREE_BLACK;
+        left_rotation(t, w);
+        w = p->right;
+      }
+      else{
+        w->color = p->color;
+        p->color = RBTREE_BLACK;
+        w->left->color == RBTREE_BLACK;
+        right_rotation(t,p);
+        x = t->root; 
+      }
+    }
+  }
+  if (x!=NULL){
+    x->color = RBTREE_BLACK;
+  }
+}
+
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   // TODO: implement to_array
   return 0;
+}
+
+
+
+
+
+int main(){
+    
+    rbtree* t = new_rbtree();
+    rbtree_insert(t, 10);
+    rbtree_insert(t, 11);
+    rbtree_insert(t, 9);
+    rbtree_insert(t, 8);
+    
+    // 여기 9를 삭제하는 것 부터 뭔가 잘못 되었음
+    
+    printf("\n----------------\n");
+    postorder(t, t->root);
+    printf("\n----------------\n");
+    
+    rbtree_erase(t, rbtree_find(t, 9));
+    printf("\n----------------\n");
+    postorder(t, t->root);
+    printf("\n----------------\n");
+
+
+  /*
+    rbtree_insert(t, 12);
+    rbtree_insert(t, 5);
+    rbtree_insert(t, 6);
+    
+    printf("\n----------------\n");
+    postorder(t, t->root);
+    printf("\n----------------\n");
+    
+    
+    rbtree_erase(t, rbtree_find(t, 6));
+    printf("\n----------------\n");
+    postorder(t, t->root);
+    printf("\n----------------\n");
+  */
+
+    return 0;
 }
