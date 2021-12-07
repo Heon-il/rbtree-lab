@@ -488,7 +488,7 @@ void rb_delete_fixup(rbtree* t, node_t* x, node_t* p){
         if (w->right!=NULL)
           w->right->color = RBTREE_BLACK;
         left_rotation(t, w);
-        w = p->right;
+        w = p->left;
       }
       else{
         w->color = p->color;
