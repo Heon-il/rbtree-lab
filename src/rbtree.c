@@ -435,6 +435,9 @@ void rb_delete_fixup(rbtree* t, node_t* x, node_t* p){
         // my code
         if (x!= t->root)
           p = x->parent->parent;
+        // 부모로 전달했을 때 부모가 이중 흑색이 되면 부모로 다시 검색
+        // 전달 한 부모가 이중 흑색이 아니면 탈출
+
       }
       // case 2) sibling의 자식의 왼쪽은 빨강, 오른쪽은 검정
       else if (w->right->color == RBTREE_BLACK || w->right == NULL){
@@ -445,13 +448,16 @@ void rb_delete_fixup(rbtree* t, node_t* x, node_t* p){
         w = p->right;
       }
 
-      // case 3) sibling의 자식의 오른쪽이 빨강
+      // case 3) sibling의 자식의 오른쪽이 빨강 -- case2)는  case3)가 해결시켜준다.
       else{
+        // else를 안해된다 --> case2)에서 case3)로 넘어오기 때문에
+        
         w->color = p->color;
         p->color = RBTREE_BLACK;
         w->right->color = RBTREE_BLACK;
         left_rotation(t,p);
         x = t->root; 
+        // case 3)는 언제나 균형을 이루게 한다.
         // 탈출
       }
     }
