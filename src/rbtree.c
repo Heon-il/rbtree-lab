@@ -323,6 +323,7 @@ int rbtree_erase(rbtree *t, node_t *p) {
   if (y_original_color == RBTREE_BLACK)
     delete_fixup(t, x);
   
+  free(p); p=NULL;
   return 0;
 }
 
