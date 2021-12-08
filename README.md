@@ -140,9 +140,10 @@ w.color = RED
 x = x.p // 부모가 red였으면 탈출, 부모가 black이면 다시 fixup 진행
 ```
 두 가지의 결과가 나올 수 있다.
-1) 부모가 red인 경우 균형이 맞춰진다.
+1) 부모가 red인 경우 균형이 맞춰진다. (자식으로 부터 흑색을 넘겨받느낟. 아래 '주의' 보기)
 2) 부모가 black인 경우 부모가 균형을 깨트리는 이중 흑색노드가 된다. 그래서 다시 이중 흑색노드를 fix하는 과정을 밟게 된다.
 
+주의) 부모가 빨간색인 경우 fixup함수 안의 while문은 진행하지 않고, x.color = BLACK 으로 흑색을 칠해 다시 균형을 맞추는 것(인터넷에 검색하면 부모에게 흑색을 넘긴다고 표현을 하는데 그 부분)
 ### Case 2) sibling(BLACK), sibling.left(RED), sibling.right(BLACK) 
 ```
 w.left.color = BLACK
