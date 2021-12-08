@@ -262,9 +262,10 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
 node_t *rbtree_find(const rbtree *t, const key_t key) {
   // 못찾은 경우 NULL을 return 하도록 해야 한다.
   node_t* cur = t->root;
-  while (cur->key != key && cur!=t->nil)
-    cur = (cur->key < key) ? cur->left : cur->right;
 
+  while (cur->key != key && cur!=t->nil)
+    cur = (key < cur->key) ? cur->left : cur->right;
+  
   if (cur==t->nil)
     return NULL; // wrong key 인경우 assert(q==NULL)을 통과해야 한다.
   else
@@ -332,11 +333,3 @@ int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   inorder(t, t->root, arr);
   return 0;
 }
-
-
-/*
-int main(){
-
-  return 0;
-}
-*/
