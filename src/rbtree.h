@@ -18,25 +18,9 @@ typedef struct {
   node_t *nil;  // for sentinel
 } rbtree;
 
-/* 나중에 삭제할 부분들*/
-void left_rotation(rbtree *, node_t *);
-void right_rotation(rbtree *, node_t *);
-void insert_fixup(rbtree *, node_t *);
-void preorder(rbtree *, node_t*);
-void inorder(rbtree *, node_t*);
-void postorder(rbtree *, node_t*);
-node_t *successor(rbtree *, node_t *);
-node_t *predecessor(rbtree *, node_t *);
-int bst_erase(rbtree *, node_t* );
-void bst_transplant(rbtree*, node_t*, node_t*);
-void delete_node_all(node_t*);
-void rbtree_transplant(rbtree*, node_t*,node_t*);
-void rb_delete_fixup(rbtree*, node_t*, node_t*);
-/*                */
-
-
 rbtree *new_rbtree(void);
 void delete_rbtree(rbtree *);
+
 node_t *rbtree_insert(rbtree *, const key_t);
 node_t *rbtree_find(const rbtree *, const key_t);
 node_t *rbtree_min(const rbtree *);
