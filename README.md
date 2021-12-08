@@ -1,3 +1,67 @@
+# Red-Black Tree
+
+## 사전 필요 지식 
+- C언어 동적 할당, 포인터 등
+- Binary Search Tree
+
+## 학습 목적
+- C언어에 대한 기본 이해(동적할당, 포인터, struct 등)
+- Insert, Delete Case에 대한 정확한 이해
+- C언어를 이용한 구현
+
+## 구현 방식
+- Sentinel(경계조건)을 이용한 Red-Black Tree 구현
+- CLRS book에서 제공하는 pseudo code
+
+## Key Point
+- 일반화된 상황을 통해 각 Case들이 결국 RB Tree의 균형을 맞추게 만든다는 것을 이해
+- `Black Height` - Red Black Tree에서 균형을 유지하기 위한 Rotation과 Color-Flipping --> **각 case들에서 일반화된 상황에서 각 노드들의 Black Height를 고려하면서 case를 따지면 이해하기 쉬움**
+- `이중 흑색 노드` : 이중 흑색 노드의 발생 상황과 이중 흑색 노드가 의미하는 바, 이중 흑색 노드가 발생하는 정확한 상황 -- *RB Tree에서 만들어지는 이중 흑색 노드는 항상 여러개의 Black Height를 가지지 않게 된다는 것도 이해*
+
+
+## Insert Case 
+1) 먼저, BST의 insert의 과정을 따름.
+2) insert 하는 노드는 red로 가정하고 넣음
+3) red로 가정하고 insert된 노드의 parent가 red인 경우 RB Tree의 특성을 유지하기 못하기 때문에 fixup 진행
+4) fixup
+
+### insert-fixup case
+용어 
+```
+z : inserted node
+w : uncle
+p : parent
+```
+*케이스들은 좌우로 대칭이기 때문에 p나 z가 left child인 경우에 대해서만 이야기함*
+
+#### case 1) uncle(red)
+```
+p.color = BLACK
+w.color = BLACK
+p.p.color = RED
+```
+p.p가 루트 인경우 마지막에 p.color = RED
+(p.p가 루트였다면 p.p에 대한 side tree(?), sibling tree(?) 가 없기 때문에 black height를 해치지 않는다.)
+
+(side tree, sibling tree..? 적절한 용어가 생각나지 않음)
+
+#### case 2) uncle(black) - triangle
+**case 3)로 변환이 되고 case 3)에서 다시 진행하여 균형을 맞추게 된다.**
+```
+z = z.p
+left_rotate(z)
+```
+
+#### case 3) uncle(black) - linear
+```
+z.p.color = BLACK
+z.p.p.color = RED
+right_rotate(z.p.p)
+```
+
+
+
+
 # Red-Black Tree 구현
 
 Balanced search tree로 많이 쓰이는 Red-black tree (이하 RB tree)를 C 언어로 구현해 보는 과제입니다.
