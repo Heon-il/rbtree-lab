@@ -18,6 +18,9 @@
 - `Black Height` - Red Black Tree에서 균형을 유지하기 위한 Rotation과 Color-Flipping --> **각 case들에서 일반화된 상황에서 각 노드들의 Black Height를 고려하면 아래에서의 case들은 모든 경우를 설명하고 결국 균형을 이루게 된다는 것을 알 수 있음**
 - `이중 흑색 노드` : 이중 흑색 노드의 발생 상황과 이중 흑색 노드가 의미하는 바, 이중 흑색 노드가 발생하는 정확한 상황 -- *RB Tree에서 만들어지는 이중 흑색 노드는 항상 여러개의 Black Height를 가지지 않게 된다는 것도 이해*
 
+Black Height를 일반화된 상황에서 본다는 이야기가 직관적으로 와닿지 않을 수 있는데 같은 프로젝트를 진행한 팀원이 그림으로 잘 설명해주심 [링크](https://it-eldorado.tistory.com/category/%EC%BB%B4%ED%93%A8%ED%84%B0%20%EA%B5%AC%EC%A1%B0%20%28Architecture%29?page=2)를 참조
+(위 링크에서는 Black Height의 정의대로 하여 자기 자신의 노드를 포함하지 않는 개수를 이용했지만, leaf노드를 제외하고 leaf노드까지 가는데 자기자신을 포함한 노드의 블랙의 개수로 해도 일반화된 상황은 깨지지 않음. 더 정확한 갠며은 Black Height로 하는 것, 더 쉬운 일반화된 상황을 만드는 것은 후자)
+
 
 ## Insert Case 
 1) 먼저, BST의 insert의 과정을 따름.
